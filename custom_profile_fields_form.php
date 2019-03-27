@@ -59,7 +59,7 @@ class profile_field_form extends \moodleform {
         $mform->addElement('header', 'update_fields',
             get_string('updaterequiredfields', 'block_profile_field_requirement'));
 
-        $mform->addElement('html', get_string('updateprofile', 'block_profile_field_requirement'));
+        $mform->addElement('html', $this->_customdata['updatedesc']);
 
         $fields = profile_get_user_fields_with_data($USER->id);
 
