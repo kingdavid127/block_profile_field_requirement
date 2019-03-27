@@ -34,7 +34,13 @@ class block_profile_field_requirement_edit_form extends block_edit_form {
      * @throws coding_exception
      */
     protected function specific_definition($mform) {
-        $mform->addElement('header', 'configheader', get_string('requiredfields', 'block_profile_field_requirement'));
+        $mform->addElement('header', 'configheader',
+            get_string('requiredfields', 'block_profile_field_requirement'));
+
+        $mform->addElement('textarea', 'config_updatedesc',
+            get_string('desctext', 'block_profile_field_requirement'), 'rows="4" cols="40"');
+        $mform->setType('config_updatedesc', PARAM_TEXT);
+        $mform->setDefault('config_updatedesc', get_string('updateprofile', 'block_profile_field_requirement'));
 
         $fields = profile_get_custom_fields();
         if (empty($fields)) {

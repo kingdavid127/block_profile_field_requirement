@@ -53,6 +53,7 @@ $PAGE->set_title(get_string('updaterequiredfields', 'block_profile_field_require
 
 if (!empty($block->config->fields)) {
     $profileform = new profile_field_form(null, [
+        'updatedesc' => $block->config->updatedesc,
         'fields' => $block->config->fields,
         'instanceid' => $instance->id,
         'courseid' => $course->id,

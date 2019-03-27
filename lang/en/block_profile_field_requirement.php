@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['desctext'] = 'Description text';
 $string['nofields'] = 'No custom profile fields setup';
 $string['pluginname'] = 'Profile field requirement';
 $string['profile_field_requirement:addinstance'] = 'Add a new profile field requirement block';
