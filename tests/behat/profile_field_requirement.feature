@@ -12,9 +12,6 @@ Feature: Adding profile field requirement block
     And the following "courses" exist:
       | fullname  | shortname |
       | Course 1  | c1        |
-    And the following "tags" exist:
-      | name         | isstandard  |
-      | Neverusedtag | 1           |
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher1 | c1     | editingteacher |
@@ -42,5 +39,21 @@ Feature: Adding profile field requirement block
     And I should see "Update required fields"
     And I should see "My custom description"
     And I set the field "my_required_field" to "filled"
+    And I press "Update profile"
+    And I should see "Course 1"
+
+    And I log out
+    And I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I configure the "block_profile_field_requirement" block
+    And I click on "Require verification" "checkbox"
+    And I press "Save changes"
+
+    And I log out
+    And I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I should see "Update required fields"
+    And I should see "My custom description"
+    And I click on "I confirm the information above is accurate." "checkbox"
     And I press "Update profile"
     And I should see "Course 1"

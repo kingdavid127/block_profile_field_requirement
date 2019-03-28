@@ -50,21 +50,32 @@ $PAGE->set_url(new \moodle_url('/blocks/profile_field_requirement/update.php',
     ['id' => $instance->id, 'courseid' => $courseid]));
 $PAGE->set_title(get_string('updaterequiredfields', 'block_profile_field_requirement'));
 
-
 if (!empty($block->config->fields)) {
+
+    $user = $DB->get_record('user', array('id' => $USER->id), '*', MUST_EXIST);
+    // Load custom profile fields data.
+    profile_load_data($user);
+
     $profileform = new profile_field_form(null, [
         'updatedesc' => $block->config->updatedesc,
         'fields' => $block->config->fields,
         'instanceid' => $instance->id,
         'courseid' => $course->id,
+        'requireverification' => $block->config->requireverification,
+        'user' => $user,
         'returnurl' => $returnurl
     ]);
 
     if ($profileform->is_cancelled()) {
         redirect($returnurl);
     } else if ($profiledata = $profileform->get_data()) {
+        if (!empty($profiledata->profileconfirm)) {
+            set_user_preference('block_field_requirement_' . $profiledata->instanceid, $profiledata->profileconfirm);
+        }
         profile_save_data($profiledata);
         redirect($returnurl);
+    } else {
+        $profileform->set_data($profiledata);
     }
     echo $OUTPUT->header();
     $profileform->display();

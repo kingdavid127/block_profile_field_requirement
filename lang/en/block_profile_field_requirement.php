@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['confirm'] = 'I confirm the information above is accurate.';
 $string['desctext'] = 'Description text';
 $string['nofields'] = 'No custom profile fields setup';
 $string['pluginname'] = 'Profile field requirement';
@@ -29,6 +30,7 @@ $string['profile_field_requirement:addinstance'] = 'Add a new profile field requ
 $string['profilefields'] = 'User profile fields';
 $string['privacy:metadata'] = 'The Profile field requirement block only shows data stored in other locations.';
 $string['requiredfields'] = 'Required fields';
+$string['requireverification'] = 'Require verification';
 $string['updaterequiredfields'] = 'Update required fields';
 $string['updateprofile'] = 'The following profile fields are required to partake in this course please fill them in and update your profile.';
 

@@ -40,11 +40,13 @@ class profile_field_form extends \moodleform {
      * Form definiton.
      */
     public function definition() {
-        global $USER;
+
         $mform = $this->_form;
 
+        $user = $this->_customdata['user'];
+
         // Add some extra hidden fields.
-        $mform->addElement('hidden', 'id', $USER->id);
+        $mform->addElement('hidden', 'id', $user->id);
         $mform->setType('id', PARAM_INT);
 
         $mform->addElement('hidden', 'instanceid', $this->_customdata['instanceid']);
@@ -61,17 +63,25 @@ class profile_field_form extends \moodleform {
 
         $mform->addElement('html', $this->_customdata['updatedesc']);
 
-        $fields = profile_get_user_fields_with_data($USER->id);
+        $fields = profile_get_user_fields_with_data($user->id);
 
         foreach ($fields as $formfield) {
             if ($formfield->is_editable()
-                && $formfield->is_empty()
                 && in_array($formfield->fieldid, $this->_customdata['fields'])) {
                 $formfield->edit_field($mform);
             }
         }
 
+        if ($this->_customdata['requireverification']) {
+            $mform->addElement('advcheckbox', 'profileconfirm', '',
+                get_string('confirm', 'block_profile_field_requirement'), null, [0, 1]);
+            $mform->setType('profileconfirm', PARAM_INT);
+            $user->profileconfirm = get_user_preferences('block_field_requirement_' . $this->_customdata['instanceid']);
+        }
+
         $this->add_action_buttons(true, get_string('updatemyprofile'));
+
+        $this->set_data($user);
     }
 
 }
