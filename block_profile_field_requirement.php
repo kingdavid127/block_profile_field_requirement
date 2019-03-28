@@ -69,12 +69,20 @@ class block_profile_field_requirement extends block_base {
         }
 
         if (!empty($this->config->fields)) {
+            if ($COURSE->id == SITEID) {
+                $context = \context_system::instance();
+            } else {
+                $context = \context_course::instance($COURSE->id);
+            }
             foreach ($this->config->fields as $field) {
                 $profile = new \profile_field_base($field, $USER->id);
                 if ($this->page->pagetype !== 'blocks-profile_field_requirement-update'
-                    && $profile->is_empty()
-                    && !is_siteadmin()
-                    && !$this->page->user_is_editing()
+                    &&
+                    (
+                        $profile->is_empty()
+                        || (!empty($this->config->requireverification) && !get_user_preferences('block_field_requirement_' . $this->instance->id))
+                    )
+                    && !has_capability('block/profile_field_requirement:addinstance', $context)
                 ) {
                     redirect(new \moodle_url('/blocks/profile_field_requirement/update.php',
                         [

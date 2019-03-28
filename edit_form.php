@@ -54,5 +54,7 @@ class block_profile_field_requirement_edit_form extends block_edit_form {
             get_string('profilefields', 'block_profile_field_requirement'),
             $profile_fields, [])->setMultiple(true);
 
+        $mform->addElement('advcheckbox', 'config_requireverification', get_string('requireverification', 'block_profile_field_requirement'));
+
     }
 }
