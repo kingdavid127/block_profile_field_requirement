@@ -73,6 +73,9 @@ if (!empty($block->config->fields)) {
             set_user_preference('block_field_requirement_' . $profiledata->instanceid, $profiledata->profileconfirm);
         }
         profile_save_data($profiledata);
+        \core\event\user_updated::create_from_userid($USER->id)->trigger();
+        profile_load_custom_fields($USER);
+
         redirect($returnurl);
     } else {
         $profileform->set_data($profiledata);
