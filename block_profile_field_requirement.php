@@ -79,7 +79,7 @@ class block_profile_field_requirement extends block_base {
                 if ($this->page->pagetype !== 'blocks-profile_field_requirement-update'
                     &&
                     (
-                        $profile->is_empty()
+                        empty($profile->data)
                         || (!empty($this->config->requireverification) && !get_user_preferences('block_field_requirement_' . $this->instance->id))
                     )
                     && !has_capability('block/profile_field_requirement:addinstance', $context)
