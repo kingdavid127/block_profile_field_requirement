@@ -33,4 +33,5 @@ $string['requiredfields'] = 'Required fields';
 $string['requireverification'] = 'Require verification';
 $string['updaterequiredfields'] = 'Update required fields';
 $string['updateprofile'] = 'The following profile fields are required to partake in this course please fill them in and update your profile.';
+$string['corefields'] = 'Core fields';
 

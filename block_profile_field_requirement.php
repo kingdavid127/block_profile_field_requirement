@@ -68,12 +68,13 @@ class block_profile_field_requirement extends block_base {
             return $this->content;
         }
 
+        if ($COURSE->id == SITEID) {
+            $context = \context_system::instance();
+        } else {
+            $context = \context_course::instance($COURSE->id);
+        }
+
         if (!empty($this->config->fields)) {
-            if ($COURSE->id == SITEID) {
-                $context = \context_system::instance();
-            } else {
-                $context = \context_course::instance($COURSE->id);
-            }
             foreach ($this->config->fields as $field) {
                 $profile = new \profile_field_base($field, $USER->id);
                 if ($this->page->pagetype !== 'blocks-profile_field_requirement-update'
@@ -94,6 +95,25 @@ class block_profile_field_requirement extends block_base {
             }
         }
 
+        if (!empty($this->config->corefields)) {
+            foreach ($this->config->corefields as $field) {
+                if ($this->page->pagetype !== 'blocks-profile_field_requirement-update'
+                    &&
+                    (
+                        empty($USER->{$field})
+                        || (!empty($this->config->requireverification) && !get_user_preferences('block_field_requirement_' . $this->instance->id))
+                    )
+                    && !has_capability('block/profile_field_requirement:addinstance', $context)
+                ) {
+                    redirect(new \moodle_url('/blocks/profile_field_requirement/update.php',
+                        [
+                            'instanceid' => $this->instance->id,
+                            'courseid' => $COURSE->id,
+                            'returnurl' => $this->page->url->out_as_local_url(false)
+                        ]));
+                }
+            }
+        }
         return null;
     }
 }
