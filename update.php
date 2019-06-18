@@ -59,6 +59,7 @@ if (!empty($block->config->fields)) {
     $profileform = new profile_field_form(null, [
         'updatedesc' => $block->config->updatedesc,
         'fields' => $block->config->fields,
+        'corefields' => $block->config->corefields,
         'instanceid' => $instance->id,
         'courseid' => $course->id,
         'requireverification' => $block->config->requireverification,
@@ -72,6 +73,23 @@ if (!empty($block->config->fields)) {
         if (!empty($profiledata->profileconfirm)) {
             set_user_preference('block_field_requirement_' . $profiledata->instanceid, $profiledata->profileconfirm);
         }
+
+        foreach ($profiledata as $name => $value) {
+            if (strpos($name, 'corefield_') === 0) {
+                if (!isset($userraw)) {
+                    $userraw = new stdClass();
+                }
+                $corefield = substr($name, 10);
+                $userraw->{$corefield} = $value;
+                unset($profiledata->{$name});
+            }
+        }
+
+        if (isset($userraw)) {
+            $userraw->id = $profiledata->id;
+            $DB->update_record('user', $userraw);
+        }
+
         profile_save_data($profiledata);
         \core\event\user_updated::create_from_userid($USER->id)->trigger();
         profile_load_custom_fields($USER);

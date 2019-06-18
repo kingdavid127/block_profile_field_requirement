@@ -72,6 +72,13 @@ class profile_field_form extends \moodleform {
             }
         }
 
+        foreach ($this->_customdata['corefields'] as $corefield) {
+            if (empty($user->{$corefield})) {
+                $mform->addElement('text', 'corefield_' . $corefield, get_string($corefield));
+                $mform->setType('corefield_' . $corefield, PARAM_RAW);
+            }
+        }
+
         if ($this->_customdata['requireverification']) {
             $mform->addElement('advcheckbox', 'profileconfirm', '',
                 get_string('confirm', 'block_profile_field_requirement'), null, [0, 1]);

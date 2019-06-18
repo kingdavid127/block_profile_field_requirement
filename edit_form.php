@@ -54,6 +54,25 @@ class block_profile_field_requirement_edit_form extends block_edit_form {
             get_string('profilefields', 'block_profile_field_requirement'),
             $profile_fields, [])->setMultiple(true);
 
+        $corefields = array(
+            'icq' => 'icq',
+            'skype' => 'skype',
+            'yahoo' => 'yahoo',
+            'aim' => 'aim',
+            'msn' => 'msn',
+            'phone1' => get_string('phone1'),
+            'phone2' => get_string('phone2'),
+            'institution' => get_string('institution'),
+            'department' => get_string('department'),
+            'address' => get_string('address'),
+            'city' => get_string('city'),
+            'country' => get_string('country')
+        );
+
+        $mform->addElement('select', 'config_corefields',
+            get_string('corefields', 'block_profile_field_requirement'),
+            $corefields, [])->setMultiple(true);
+
         $mform->addElement('advcheckbox', 'config_requireverification', get_string('requireverification', 'block_profile_field_requirement'));
 
     }
