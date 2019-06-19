@@ -46,13 +46,17 @@ class block_profile_field_requirement_edit_form extends block_edit_form {
         if (empty($fields)) {
             $mform->addElement('html', get_string('nofields', 'block_profile_field_requirement'));
         }
+
+        $profile_fields = array();
         foreach ($fields as $field) {
             $profile_fields[$field->id] = $field->name . ' (' . $field->shortname . ')';
         }
 
-        $mform->addElement('select', 'config_fields',
-            get_string('profilefields', 'block_profile_field_requirement'),
-            $profile_fields, [])->setMultiple(true);
+        if ($profile_fields) {
+            $mform->addElement('select', 'config_fields',
+                    get_string('profilefields', 'block_profile_field_requirement'),
+                    $profile_fields, [])->setMultiple(true);
+        }
 
         $corefields = array(
             'icq' => 'icq',

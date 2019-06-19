@@ -50,7 +50,7 @@ $PAGE->set_url(new \moodle_url('/blocks/profile_field_requirement/update.php',
     ['id' => $instance->id, 'courseid' => $courseid]));
 $PAGE->set_title(get_string('updaterequiredfields', 'block_profile_field_requirement'));
 
-if (!empty($block->config->fields)) {
+if (!empty($block->config->fields) || !empty($block->config->corefields)) {
 
     $user = $DB->get_record('user', array('id' => $USER->id), '*', MUST_EXIST);
     // Load custom profile fields data.
@@ -58,8 +58,8 @@ if (!empty($block->config->fields)) {
 
     $profileform = new profile_field_form(null, [
         'updatedesc' => $block->config->updatedesc,
-        'fields' => $block->config->fields,
-        'corefields' => $block->config->corefields,
+        'fields' => !empty($block->config->fields) ? $block->config->fields : array(),
+        'corefields' => !empty($block->config->corefields) ? $block->config->corefields : array(),
         'instanceid' => $instance->id,
         'courseid' => $course->id,
         'requireverification' => $block->config->requireverification,
@@ -88,6 +88,7 @@ if (!empty($block->config->fields)) {
         if (isset($userraw)) {
             $userraw->id = $profiledata->id;
             $DB->update_record('user', $userraw);
+            $USER = get_complete_user_data('id', $USER->id);
         }
 
         profile_save_data($profiledata);
