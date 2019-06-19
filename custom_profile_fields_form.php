@@ -40,6 +40,7 @@ class profile_field_form extends \moodleform {
      * Form definiton.
      */
     public function definition() {
+        global $CFG;
 
         $mform = $this->_form;
 
@@ -74,10 +75,20 @@ class profile_field_form extends \moodleform {
 
         foreach ($this->_customdata['corefields'] as $corefield) {
             if (empty($user->{$corefield})) {
-                if (get_string_manager()->string_exists($corefield, 'moodle')) {
-                    $mform->addElement('text', 'corefield_' . $corefield, get_string($corefield));
+                if ($corefield == 'country') {
+                    $purpose = user_edit_map_field_purpose($user->id, 'country');
+                    $choices = get_string_manager()->get_list_of_countries();
+                    $choices = array('' => get_string('selectacountry') . '...') + $choices;
+                    $mform->addElement('select', 'corefield_country', get_string('selectacountry'), $choices, $purpose);
+                    if (!empty($CFG->country)) {
+                        $mform->setDefault('country', core_user::get_property_default('country'));
+                    }
                 } else {
-                    $mform->addElement('text', 'corefield_' . $corefield, $corefield);
+                    if (get_string_manager()->string_exists($corefield, 'moodle')) {
+                        $mform->addElement('text', 'corefield_' . $corefield, get_string($corefield));
+                    } else {
+                        $mform->addElement('text', 'corefield_' . $corefield, $corefield);
+                    }
                 }
                 $mform->setType('corefield_' . $corefield, PARAM_RAW);
             }
