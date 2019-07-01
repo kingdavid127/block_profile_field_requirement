@@ -106,4 +106,23 @@ class profile_field_form extends \moodleform {
         $this->set_data($user);
     }
 
+    public function validation($data, $files) {
+        global $CFG, $DB;
+
+        $errors = array();
+
+        foreach ($data as $name => $value) {
+            if (strpos($name, 'profile_field_') === 0) {
+                $hortname = substr($name, 14);
+                $field = $DB->get_record('user_info_field', array('shortname' => $hortname));
+                require_once($CFG->dirroot . '/user/profile/field/' . $field->datatype. '/field.class.php');
+                $classname = 'profile_field_' . $field->datatype;
+                $fieldobject = new $classname($field->id, 0, $field);;
+                if ($error = $fieldobject->edit_validate_field((object)$data)) {
+                    $errors += $error;
+                }
+            }
+        }
+        return $errors;
+    }
 }
