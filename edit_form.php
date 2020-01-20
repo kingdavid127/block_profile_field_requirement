@@ -39,7 +39,7 @@ class block_profile_field_requirement_edit_form extends block_edit_form {
 
         $mform->addElement('textarea', 'config_updatedesc',
             get_string('desctext', 'block_profile_field_requirement'), 'rows="4" cols="40"');
-        $mform->setType('config_updatedesc', PARAM_TEXT);
+        $mform->setType('config_updatedesc', PARAM_RAW);
         $mform->setDefault('config_updatedesc', get_string('updateprofile', 'block_profile_field_requirement'));
 
         $fields = profile_get_custom_fields();
