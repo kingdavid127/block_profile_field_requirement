@@ -18,6 +18,7 @@ namespace block_profile_field_requirement;
 
 use block_base;
 use coding_exception;
+use context_system;
 use core_cache\cache;
 use core_user;
 use profile_field_base;
@@ -137,6 +138,24 @@ class requirement {
     }
 
     /**
+     * Whether the current user may actually change the value of a profile field.
+     *
+     * This is the same test the core profile form applies: an invisible field is
+     * not rendered at all, and a locked one is frozen for everyone without
+     * moodle/user:update.
+     *
+     * @param profile_field_base $field
+     * @return bool
+     */
+    public static function is_field_editable(profile_field_base $field): bool {
+        if (!$field->is_editable()) {
+            return false;
+        }
+
+        return !$field->is_locked() || has_capability('moodle/user:update', context_system::instance());
+    }
+
+    /**
      * Configured custom profile fields the user is actually able to edit.
      *
      * A field the user cannot edit can never be satisfied, so requiring it would
@@ -161,7 +180,7 @@ class requirement {
             if (!in_array((int) $field->fieldid, $configured, true)) {
                 continue;
             }
-            if (!$field->is_editable()) {
+            if (!self::is_field_editable($field)) {
                 continue;
             }
             $fields[(int) $field->fieldid] = $field;
