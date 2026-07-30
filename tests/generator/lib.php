@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,20 +12,17 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Version details
+ * Data generator for block_profile_field_requirement.
  *
  * @package    block_profile_field_requirement
+ * @category   test
  * @copyright  2019 MLC
+ * @copyright  2026 Dragonfly EdTech
+ * @author     David Saylor <david.saylor@dragonflyedtech.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2026072900;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires  = 2024100700;        // Requires Moodle 4.5.
-$plugin->component = 'block_profile_field_requirement';  // Full name of the plugin (used for diagnostics).
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '4.5.0';
+class block_profile_field_requirement_generator extends testing_block_generator {
+}
