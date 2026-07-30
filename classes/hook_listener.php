@@ -72,9 +72,12 @@ class hook_listener {
             return;
         }
 
-        // Hidden instances never enforce. Passing false makes that explicit rather
-        // than inheriting it from whether the viewer happens to be editing.
-        $PAGE->blocks->load_blocks(false);
+        // Load exactly the way core would. block_manager::load_blocks() only ever
+        // runs once per page, so forcing the hidden blocks out here would also hide
+        // them from moodle_page::starting_output() later, leaving editing users
+        // unable to see or unhide any block on the site. Hidden instances of this
+        // block are skipped individually below instead.
+        $PAGE->blocks->load_blocks();
         if (!$PAGE->blocks->is_block_present(requirement::BLOCKNAME)) {
             return;
         }
@@ -82,6 +85,10 @@ class hook_listener {
         foreach ($PAGE->blocks->get_regions() as $region) {
             foreach ($PAGE->blocks->get_blocks_for_region($region) as $block) {
                 if ($block->instance->blockname !== requirement::BLOCKNAME) {
+                    continue;
+                }
+                // A hidden instance enforces nothing.
+                if (empty($block->instance->visible)) {
                     continue;
                 }
                 // Anyone who can configure the block is exempt, otherwise they could

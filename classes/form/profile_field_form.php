@@ -105,6 +105,21 @@ class profile_field_form extends moodleform {
     }
 
     /**
+     * Let each custom profile field tweak its own element once data is set.
+     *
+     * This is what freezes a locked field, exactly as the core profile form does.
+     * Such fields are already excluded from the requirement, so this only guards
+     * against one being rendered by some other route.
+     */
+    public function definition_after_data(): void {
+        parent::definition_after_data();
+
+        foreach ($this->_customdata['profilefields'] as $formfield) {
+            $formfield->edit_after_data($this->_form);
+        }
+    }
+
+    /**
      * Add a single core user field, typed the way core declares it.
      *
      * @param string $corefield field shortname

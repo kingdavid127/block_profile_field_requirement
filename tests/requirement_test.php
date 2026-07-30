@@ -231,6 +231,38 @@ final class requirement_test extends \advanced_testcase {
     }
 
     /**
+     * A visible but locked field is not required either.
+     *
+     * The core profile form freezes locked fields for anyone without
+     * moodle/user:update, so the user could never satisfy such a requirement.
+     */
+    public function test_visible_locked_field_is_not_required(): void {
+        $this->resetAfterTest();
+
+        $field = $this->getDataGenerator()->create_custom_profile_field([
+            'datatype' => 'text',
+            'shortname' => 'staffid',
+            'name' => 'Staff ID',
+            'visible' => PROFILE_VISIBLE_ALL,
+            'locked' => 1,
+        ]);
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $block = $this->make_block(['fields' => [$field->id]]);
+        $loaded = $this->load_user($user->id);
+
+        $this->assertSame([], requirement::get_editable_profile_fields($block, $loaded));
+        $this->assertTrue(requirement::is_satisfied($block, $loaded));
+
+        // Someone who can edit any profile is not frozen, so the field still counts.
+        $this->setAdminUser();
+        $this->assertCount(1, requirement::get_editable_profile_fields($block, $loaded));
+        $this->assertFalse(requirement::is_satisfied($block, $loaded));
+    }
+
+    /**
      * A deleted field left in the saved config does not block anyone.
      */
     public function test_deleted_custom_field_in_saved_config_is_ignored(): void {
