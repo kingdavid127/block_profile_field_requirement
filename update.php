@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,94 +12,141 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Profile field requirement
+ * Lets a user supply the profile fields a block instance requires.
  *
  * @package    block_profile_field_requirement
  * @copyright  2019 MLC
+ * @copyright  2026 Dragonfly EdTech
+ * @author     David Saylor <david.saylor@dragonflyedtech.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once("../../config.php");
-require_once("custom_profile_fields_form.php");
+use block_profile_field_requirement\form\profile_field_form;
+use block_profile_field_requirement\requirement;
+
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/user/profile/lib.php');
 
 $instanceid = required_param('instanceid', PARAM_INT);
 $courseid = required_param('courseid', PARAM_INT);
-$returnurl = required_param('returnurl', PARAM_URL);
+$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 
-$course = $DB->get_record("course", array("id" => $courseid), '*', MUST_EXIST);
+$course = get_course($courseid);
+require_login($course);
 
 if ($course->id == SITEID) {
-    require_login();
     $context = context_system::instance();
     $PAGE->set_pagelayout('standard');
+    $defaultreturn = new moodle_url('/');
 } else {
-    require_login($course->id);
     $context = context_course::instance($course->id);
     $PAGE->set_pagelayout('incourse');
+    $defaultreturn = new moodle_url('/course/view.php', ['id' => $course->id]);
 }
 
-$instance = $DB->get_record('block_instances', array('id' => $instanceid));
-$block = block_instance('profile_field_requirement', $instance);
+$returnurl = $returnurl ?: $defaultreturn->out_as_local_url(false);
 
-// Page format.
+// The instance must exist, be one of ours, and actually live in the context we
+// were called for. Without this, any block instance id could be passed in.
+$instance = $DB->get_record(
+    'block_instances',
+    ['id' => $instanceid, 'blockname' => requirement::BLOCKNAME],
+    '*',
+    MUST_EXIST
+);
+
+// Context ids come back as strings from the path, so normalise before comparing.
+$allowedcontextids = array_map('intval', $context->get_parent_context_ids(true));
+if (!in_array((int) $instance->parentcontextid, $allowedcontextids, true)) {
+    throw new moodle_exception('error_wrongcontext', 'block_profile_field_requirement');
+}
+
+$block = block_instance(requirement::BLOCKNAME, $instance, $PAGE);
+if (!$block) {
+    throw new moodle_exception('error_noinstance', 'block_profile_field_requirement');
+}
+
 $PAGE->set_context($context);
-$PAGE->set_url(new \moodle_url('/blocks/profile_field_requirement/update.php',
-    ['id' => $instance->id, 'courseid' => $courseid]));
+$PAGE->set_url(new moodle_url('/blocks/profile_field_requirement/update.php', [
+    'instanceid' => $instance->id,
+    'courseid' => $course->id,
+]));
 $PAGE->set_title(get_string('updaterequiredfields', 'block_profile_field_requirement'));
+$PAGE->set_heading($course->fullname);
 
-if (!empty($block->config->fields) || !empty($block->config->corefields)) {
+// Nothing configured means nothing to ask for.
+if (!requirement::is_configured($block)) {
+    redirect($returnurl);
+}
 
-    $user = $DB->get_record('user', array('id' => $USER->id), '*', MUST_EXIST);
-    // Load custom profile fields data.
+$user = get_complete_user_data('id', $USER->id);
+profile_load_data($user);
+
+$profileform = new profile_field_form(null, [
+    'user' => $user,
+    'instanceid' => $instance->id,
+    'courseid' => $course->id,
+    'returnurl' => $returnurl,
+    'updatedesc' => $block->config->updatedesc ?? '',
+    'profilefields' => requirement::get_editable_profile_fields($block, $user),
+    'corefields' => requirement::get_outstanding_core_fields($block, $user),
+    'requireverification' => requirement::requires_verification($block),
+]);
+
+if ($profileform->is_cancelled()) {
+    redirect($returnurl);
+}
+
+if ($profiledata = $profileform->get_data()) {
+    $corefields = new stdClass();
+    $hascorefields = false;
+
+    foreach ($profiledata as $name => $value) {
+        if (strpos($name, 'corefield_') !== 0) {
+            continue;
+        }
+        $corefield = substr($name, strlen('corefield_'));
+        if (requirement::core_field_exists($corefield)) {
+            $corefields->{$corefield} = $value;
+            $hascorefields = true;
+        }
+        unset($profiledata->{$name});
+    }
+
+    if ($hascorefields) {
+        $corefields->id = $USER->id;
+        $DB->update_record('user', $corefields);
+    }
+
+    $profiledata->id = $USER->id;
+    profile_save_data($profiledata);
+
+    if (requirement::requires_verification($block)) {
+        set_user_preference(
+            requirement::PREFERENCE_PREFIX . $instance->id,
+            empty($profiledata->profileconfirm) ? 0 : 1
+        );
+    }
+
+    $USER = get_complete_user_data('id', $USER->id);
+    profile_load_custom_fields($USER);
+    \core\event\user_updated::create_from_userid($USER->id)->trigger();
+
+    // Only leave once the requirement is genuinely met, otherwise the hook would
+    // bounce the user straight back here with no explanation.
+    $user = get_complete_user_data('id', $USER->id);
     profile_load_data($user);
 
-    $profileform = new profile_field_form(null, [
-        'updatedesc' => $block->config->updatedesc,
-        'fields' => !empty($block->config->fields) ? $block->config->fields : array(),
-        'corefields' => !empty($block->config->corefields) ? $block->config->corefields : array(),
-        'instanceid' => $instance->id,
-        'courseid' => $course->id,
-        'requireverification' => $block->config->requireverification,
-        'user' => $user,
-        'returnurl' => $returnurl
-    ]);
-
-    if ($profileform->is_cancelled()) {
+    if (requirement::is_satisfied($block, $user)) {
         redirect($returnurl);
-    } else if ($profiledata = $profileform->get_data()) {
-        if (!empty($profiledata->profileconfirm)) {
-            set_user_preference('block_field_requirement_' . $profiledata->instanceid, $profiledata->profileconfirm);
-        }
-
-        foreach ($profiledata as $name => $value) {
-            if (strpos($name, 'corefield_') === 0) {
-                if (!isset($userraw)) {
-                    $userraw = new stdClass();
-                }
-                $corefield = substr($name, 10);
-                $userraw->{$corefield} = $value;
-                unset($profiledata->{$name});
-            }
-        }
-
-        if (isset($userraw)) {
-            $userraw->id = $profiledata->id;
-            $DB->update_record('user', $userraw);
-            $USER = get_complete_user_data('id', $USER->id);
-        }
-
-        profile_save_data($profiledata);
-        \core\event\user_updated::create_from_userid($USER->id)->trigger();
-        profile_load_custom_fields($USER);
-
-        redirect($returnurl);
-    } else {
-        $profileform->set_data($profiledata);
     }
-    echo $OUTPUT->header();
-    $profileform->display();
-    echo $OUTPUT->footer();
+
+    \core\notification::error(get_string('error_stilloutstanding', 'block_profile_field_requirement'));
 }
+
+echo $OUTPUT->header();
+$profileform->display();
+echo $OUTPUT->footer();
