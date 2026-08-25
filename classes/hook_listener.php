@@ -51,6 +51,30 @@ class hook_listener {
     ];
 
     /**
+     * Page layouts on which enforcement never fires.
+     *
+     * A site-wide block instance (pagetypepattern '*') matches every page whose
+     * layout declares a block region, and some themes declare regions on layouts
+     * that never render them (Boost's 'embedded'). Chrome-less and constrained
+     * layouts are excluded here: full-bleed embedded pages, bare/base pages,
+     * pop-ups, print views, secure (exam browser) windows, and maintenance mode.
+     * Standard content layouts (standard, report, course, incourse, frontpage,
+     * mydashboard, ...) stay enforced.
+     *
+     * @var string[]
+     */
+    private const EXEMPT_PAGELAYOUTS = [
+        'base',
+        'embedded',
+        'frametop',
+        'maintenance',
+        'popup',
+        'print',
+        'redirect',
+        'secure',
+    ];
+
+    /**
      * Bounce the user to the update form if any block on this page is unsatisfied.
      *
      * @param before_http_headers $hook
@@ -66,6 +90,9 @@ class hook_listener {
             return;
         }
         if (in_array($PAGE->pagetype, self::EXEMPT_PAGETYPES, true) || !$PAGE->has_set_url()) {
+            return;
+        }
+        if (in_array($PAGE->pagelayout, self::EXEMPT_PAGELAYOUTS, true)) {
             return;
         }
         if (!requirement::any_instance_exists()) {
